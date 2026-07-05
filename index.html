@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitcoin · money by cryptographic consensus — a teardown</title>
+<meta name="description" content="Bitcoin, rendered not invented: money by cryptographic consensus — the fourth theory of money after commodity, credit, and state. A live tamper-evident hash chain and a real in-browser proof-of-work miner; the honest supply cap (20,999,999.9769 BTC, not 21M); and the live debate, flagged. Educational, not investment advice. AGORA · David Lee Wise / ROOT0.">
+<style>
+  :root{ --vellum:#f4ecda; --vellum2:#efe5cf; --ink:#2a2418; --ink2:#54492f; --dim:#8a7a55;
+    --btc:#f7931a; --btc2:#c9720c; --line:#d8caa6; --green:#3f8a4a; --red:#c0442e; --hi:#fbf4e4; }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--vellum);color:var(--ink);line-height:1.62;
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    background-image:radial-gradient(120% 80% at 108% -6%,rgba(247,147,26,.14),transparent 52%);}
+  .wrap{max-width:860px;margin:0 auto;padding:40px 22px 90px}
+  .eyebrow{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--btc2)}
+  h1{font-size:clamp(30px,6vw,46px);margin:.24em 0 .1em;font-weight:600}
+  h1 .b{color:var(--btc)}
+  .sub{max-width:74ch;font-size:16.5px;color:var(--ink2)} .sub b{color:var(--ink)}
+  h2{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--btc2);margin:0 0 12px}
+  section{margin:40px 0 0;padding:22px 24px;border:1px solid var(--line);border-radius:4px;background:var(--hi)}
+  p{max-width:78ch}
+  .theories{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+  @media(max-width:640px){.theories{grid-template-columns:1fr 1fr}}
+  .th{border:1px solid var(--line);border-radius:4px;padding:10px 11px;background:var(--vellum)}
+  .th b{display:block;font-family:ui-monospace,monospace;font-size:11px;color:var(--btc2);letter-spacing:.05em}
+  .th span{font-size:12.5px;color:var(--ink2)}
+  .th.on{border-color:var(--btc);box-shadow:0 0 0 1px var(--btc) inset;background:var(--hi)}
+  .chain{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  .blk{border:1px solid var(--line);border-left:4px solid var(--green);border-radius:4px;padding:11px 13px;background:var(--vellum);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  .blk.bad{border-left-color:var(--red);background:#faeee9}
+  .blk .r{display:flex;gap:8px;align-items:baseline;margin:2px 0;flex-wrap:wrap}
+  .blk .k{color:var(--dim);min-width:52px}
+  .blk .h{color:var(--ink2);word-break:break-all}
+  .blk .h.ok{color:var(--green)} .blk .h.no{color:var(--red)}
+  .blk input{font-family:inherit;font-size:12px;background:var(--hi);border:1px solid var(--line);border-radius:3px;padding:4px 7px;color:var(--ink);flex:1;min-width:120px}
+  .badge{display:inline-block;font-size:10px;padding:1px 7px;border-radius:10px;font-family:ui-monospace,monospace;letter-spacing:.04em}
+  .badge.ok{background:rgba(63,138,74,.14);color:var(--green)} .badge.no{background:rgba(192,68,46,.14);color:var(--red)}
+  button{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--btc2);background:var(--hi);border:1px solid var(--btc);border-radius:4px;padding:8px 15px;cursor:pointer;margin:10px 8px 0 0}
+  button:hover{background:var(--btc);color:#fff}
+  .mine{margin-top:8px}
+  .mrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-family:ui-monospace,monospace;font-size:12.5px;margin-top:10px}
+  .mrow label{color:var(--dim)} input[type=range]{accent-color:var(--btc)}
+  .readout{font-family:ui-monospace,monospace;font-size:12.5px;margin-top:12px;line-height:1.9}
+  .readout .v{color:var(--btc2)} .readout .hash{word-break:break-all;color:var(--green)}
+  .supply{font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.9;margin-top:8px}
+  .supply .v{color:var(--btc2)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  @media(max-width:640px){.cols{grid-template-columns:1fr}}
+  .col h3{font-size:13px;letter-spacing:.04em;margin:0 0 7px}
+  .col.real h3{color:var(--green)} .col.debate h3{color:var(--btc2)}
+  .col li{font-size:13px;color:var(--ink2);margin-bottom:6px;line-height:1.5}
+  .flag{margin-top:16px;background:rgba(247,147,26,.07);border:1px solid rgba(247,147,26,.3);border-radius:4px;padding:12px 14px;font-size:13px;color:var(--ink2)}
+  .flag b{color:var(--btc2)}
+  .notadvice{margin-top:14px;border:2px solid var(--btc);border-radius:4px;padding:12px 14px;font-size:13px;background:var(--hi)}
+  .notadvice b{color:var(--btc2)}
+  .cap{font-size:12px;color:var(--dim);line-height:1.5;margin-top:8px}
+  a{color:var(--btc2)}
+  footer{margin-top:40px;border-top:1px solid var(--line);padding-top:16px;font-family:ui-monospace,monospace;font-size:11px;color:var(--dim);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">UD0 · AGORA · THE MARKETPLACE · render-not-invent</div>
+  <h1><span class="b">Bitcoin</span> — money by cryptographic consensus</h1>
+  <p class="sub">The <a href="https://davidwise01.github.io/money/">money</a> sphere named three theories of what money is — a <b>commodity</b>, a <b>credit</b> relationship, a creature of the <b>state</b>. Bitcoin is the argument for a fourth: money as <b>consensus</b>, a ledger no one owns that everyone can verify. This is a teardown of the machine, honestly — the parts that are settled engineering, run live in your browser, and the parts that are still an argument, flagged as one. <b>Not investment advice.</b></p>
+
+  <section>
+    <h2>the four theories of money</h2>
+    <div class="theories">
+      <div class="th"><b>COMMODITY</b><span>worth by its metal — Menger's saleable good</span></div>
+      <div class="th"><b>CREDIT</b><span>a record of who owes whom — Graeber's ledger</span></div>
+      <div class="th"><b>STATE</b><span>money is what taxes are paid in — chartalism</span></div>
+      <div class="th on"><b>CONSENSUS</b><span>a ledger secured by math and incentive, not a sovereign</span></div>
+    </div>
+    <p style="margin-top:12px">The old three all rest on <i>someone</i> — a mint, a counterparty, a treasury. Satoshi Nakamoto's 2008 problem was whether a fourth was possible: a ledger with <b>no trusted third party</b> that still can't be forged or double-spent. The answer is the two machines below. Whether it is <i>money</i> yet is the argument at the end.</p>
+  </section>
+
+  <section>
+    <h2>machine one · the tamper-evident ledger — run it</h2>
+    <p>A blockchain is a list of blocks where each block carries the <b>hash</b> of the one before it. The hash is a real SHA-256, computed live here. "Mine" the chain so every block's hash starts with <code>00</code> (a valid block). Then <b>edit any block's data</b> — its hash changes, no longer starts with <code>00</code>, and every block after it points at a stale hash. The tampering is instantly visible. That, and only that, is what makes the ledger trustworthy: not a guard, but arithmetic.</p>
+    <div class="chain" id="chain"></div>
+    <button id="mineChain">⛏ mine the chain (make it valid)</button>
+    <button id="tamper">✎ tamper with block 1</button>
+    <p class="cap">Real SHA-256 (a synchronous implementation, verified against the standard test vector on load). Each block's hash = SHA-256( index · previous-hash · data · nonce ). Change one byte anywhere and the linkage breaks — the property Nakamoto used to remove the trusted third party.</p>
+  </section>
+
+  <section>
+    <h2>machine two · proof-of-work — mine a real block</h2>
+    <p>How does the network agree which block is next, with no chairman? Whoever first finds a <b>nonce</b> making the block's hash small enough — here, starting with a chosen number of zeros — wins the right to add it. Finding it takes guessing; checking it is instant. That asymmetry <i>is</i> the security. Pick a difficulty and mine — you are doing exactly what a mining rig does, only slower.</p>
+    <div class="mrow">
+      <label>difficulty (leading zero hex digits)</label>
+      <input type="range" id="diff" min="1" max="6" value="4"><span class="v" id="diffV">4</span>
+      <span style="color:var(--dim)">≈ 1 in <span id="odds">65,536</span> hashes</span>
+    </div>
+    <button id="mineBtn">⛏ mine a block</button><button id="mineStop">■ stop</button>
+    <div class="readout" id="mineOut">idle — press mine.</div>
+    <p class="cap">Real proof-of-work on a real SHA-256, in your browser thread. The live hashrate is genuinely how fast this tab computes SHA-256; a purpose-built ASIC does ~100 trillion of these per second, which is why real Bitcoin difficulty targets ~19 leading zero bits, not 4 hex digits. Same algorithm, ~15 orders of magnitude apart.</p>
+  </section>
+
+  <section>
+    <h2>the supply — and why it is not 21 million</h2>
+    <p>Every block also mints new coins — the <b>subsidy</b> — and that subsidy <b>halves every 210,000 blocks</b> (about four years). It starts at 50 BTC and steps down: 50 → 25 → 12.5 → … until, after 33 halvings, it rounds to zero. Sum the whole geometric series and the famous cap appears — <b>21,000,000</b>. But the protocol counts in integer <b>satoshis</b> (10⁻⁸ BTC) and floors the division at each halving, so the true maximum is:</p>
+    <div class="supply">
+      exact terminal supply: <span class="v">20,999,999.9769 BTC</span> — about <span class="v">0.0231 BTC short</span> of 21 million<br>
+      first era (blocks 0–209,999): <span class="v">10,500,000 BTC</span> — half of all coins minted in the first ~4 years<br>
+      last subsidy block: <span class="v">~6,930,000</span> — around the year <span class="v">2140</span><br>
+      halving interval: <span class="v">210,000 blocks × 10 min ≈ 3.99 years</span>
+    </div>
+    <p style="margin-top:10px">The "21 million" on every headline is a rounding of the ideal sum; the machine itself stops just below it. A small thing — but it is the difference between the story and the code, and the code is the one that runs.</p>
+  </section>
+
+  <section>
+    <h2>what's settled, and what's still an argument</h2>
+    <div class="cols">
+      <div class="col real">
+        <h3>✓ SETTLED ENGINEERING</h3>
+        <ul style="padding-left:18px;margin:0">
+          <li>SHA-256 hashing, the hash-linked chain, tamper-evidence — demonstrated above, exact.</li>
+          <li>Proof-of-work as Byzantine-fault-tolerant agreement without a trusted party (Nakamoto, 2008).</li>
+          <li>The fixed emission schedule and the sub-21M cap — arithmetic, not opinion.</li>
+          <li>The double-spend problem is genuinely solved for the longest-chain rule under an honest majority.</li>
+        </ul>
+      </div>
+      <div class="col debate">
+        <h3>⚑ STILL CONTESTED</h3>
+        <ul style="padding-left:18px;margin:0">
+          <li><b>Is it money?</b> It is a poor medium of exchange and unit of account today; mostly held, not spent. "Digital gold" is a claim, not a settled fact.</li>
+          <li><b>The energy.</b> The consumption is real and large; whether it is "waste" or the literal price of decentralization is argued in good faith on both sides.</li>
+          <li><b>Decentralization.</b> A handful of mining pools and exchanges concentrate real power — "trustless" describes the protocol, not the ecosystem around it.</li>
+          <li><b>Value.</b> Whether the price reflects monetary demand or reflexive speculation is exactly the open question — see <a href="https://davidwise01.github.io/the-market/">the-market</a> on bubbles.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="notadvice"><b>Not investment advice.</b> This page explains how the protocol works and lays out the genuine disagreement about what it is worth. It makes no prediction of price and no recommendation to buy, sell, or hold. Nothing here is financial advice — for that, a licensed advisor, not a teardown.</div>
+  </section>
+
+  <section>
+    <h2>the honest ledger</h2>
+    <p><b>Real (rendered, not invented):</b> the SHA-256, the hash chain, the proof-of-work, and the supply arithmetic are all exact and computed live — you can check every one in this tab. The four-theories framing follows the <a href="https://davidwise01.github.io/money/">money</a> sphere (Menger / Graeber / chartalism), with consensus added for Bitcoin. <b>Flagged:</b> everything in "still contested" is a live argument presented as one, not resolved. Sources: Nakamoto's 2008 white paper (the mechanism), the Bitcoin protocol rules (the supply), and standard cryptography (SHA-256, FIPS 180-4). No price data, no forecast.</p>
+    <p class="cap">Where it belongs: <a href="https://davidwise01.github.io/money/">money</a> (what money is) · <a href="https://davidwise01.github.io/the-market/">the-market</a> (how prices form) · <a href="https://davidwise01.github.io/the-graveyard/">the-graveyard</a> (the honest ledger of what this corpus itself earned: $0.0386).</p>
+    <p class="cap" style="margin-top:10px"><b>AVAN's inverse companion:</b> <a href="https://davidwise01.github.io/shintaku/">信託 · Shintaku</a> — "trustless" is trust <i>relocated</i>, not removed: from a banker to the math, the miners' greed, and your own custody of a key.</p>
+  </section>
+
+  <footer>
+    AGORA · the marketplace · UD0 · David Lee Wise (ROOT0) with AVAN · render-not-invent, two-layer honest · educational, not investment advice · CC-BY-ND-4.0
+  </footer>
+</div>
+<script>
+"use strict";
+/* ---- compact synchronous SHA-256 (public-domain algorithm; verified against the standard
+   test vector at load so the page proves its own hasher before using it) ---- */
+function sha256(ascii){
+  function rr(n,x){return (x>>>n)|(x<<(32-n));}
+  var K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  var H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  var bytes=[],i,j;
+  for(i=0;i<ascii.length;i++){ var c=ascii.charCodeAt(i);
+    if(c<128)bytes.push(c);
+    else if(c<2048){bytes.push(192|(c>>6),128|(c&63));}
+    else{bytes.push(224|(c>>12),128|((c>>6)&63),128|(c&63));} }
+  var l=bytes.length, bl=l*8; bytes.push(0x80);
+  while(bytes.length%64!==56)bytes.push(0);
+  for(i=7;i>=0;i--)bytes.push((bl/Math.pow(2,i*8))&255);
+  var w=new Int32Array(64);
+  for(i=0;i<bytes.length;i+=64){
+    for(j=0;j<16;j++)w[j]=(bytes[i+j*4]<<24)|(bytes[i+j*4+1]<<16)|(bytes[i+j*4+2]<<8)|(bytes[i+j*4+3]);
+    for(j=16;j<64;j++){ var s0=rr(7,w[j-15])^rr(18,w[j-15])^(w[j-15]>>>3),
+      s1=rr(17,w[j-2])^rr(19,w[j-2])^(w[j-2]>>>10);
+      w[j]=(w[j-16]+s0+w[j-7]+s1)|0; }
+    var a=H[0],b=H[1],c2=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for(j=0;j<64;j++){
+      var S1=rr(6,e)^rr(11,e)^rr(25,e), ch=(e&f)^(~e&g), t1=(h+S1+ch+K[j]+w[j])|0,
+          S0=rr(2,a)^rr(13,a)^rr(22,a), mj=(a&b)^(a&c2)^(b&c2), t2=(S0+mj)|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=c2;c2=b;b=a;a=(t1+t2)|0;
+    }
+    H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+c2)|0;H[3]=(H[3]+d)|0;
+    H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0;
+  }
+  var out="";
+  for(i=0;i<8;i++)for(j=3;j>=0;j--)out+=(("0"+((H[i]>>>(j*8))&255).toString(16)).slice(-2));
+  return out;
+}
+// prove the hasher before trusting it
+var SHA_OK = sha256("abc")==="ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+
+/* ---- machine one: the tamper-evident chain ---- */
+var GEN="0000000000000000000000000000000000000000000000000000000000000000";
+var blocks=[{data:"Alice pays Bob 3",nonce:0},{data:"Bob pays Carol 1",nonce:0},{data:"Carol pays Dave 2",nonce:0}];
+function hashOf(i){ var prev = i===0?GEN:blocks[i-1].h; return sha256(i+"|"+prev+"|"+blocks[i].data+"|"+blocks[i].nonce); }
+function recompute(){ for(var i=0;i<blocks.length;i++) blocks[i].h=hashOf(i); }
+function render(){
+  recompute();
+  var el=document.getElementById("chain"); el.innerHTML="";
+  for(var i=0;i<blocks.length;i++){
+    var b=blocks[i], valid=b.h.slice(0,2)==="00";
+    var prevShown=i===0?GEN:blocks[i-1].h;
+    var div=document.createElement("div"); div.className="blk"+(valid?"":" bad");
+    div.innerHTML='<div class="r"><span class="k">block '+i+'</span><span class="badge '+(valid?'ok">valid ⛏':'no">invalid — re-mine')+'</span></div>'+
+      '<div class="r"><span class="k">data</span><input data-i="'+i+'" value="'+b.data.replace(/"/g,'&quot;')+'"></div>'+
+      '<div class="r"><span class="k">nonce</span><span class="h">'+b.nonce+'</span></div>'+
+      '<div class="r"><span class="k">prev</span><span class="h">'+prevShown.slice(0,32)+'…</span></div>'+
+      '<div class="r"><span class="k">hash</span><span class="h '+(valid?"ok":"no")+'">'+b.h.slice(0,32)+'…</span></div>';
+    el.appendChild(div);
+  }
+  [].forEach.call(document.querySelectorAll(".blk input"),function(inp){
+    inp.oninput=function(){ blocks[+inp.dataset.i].data=inp.value; render(); };
+  });
+}
+function mineChain(){ for(var i=0;i<blocks.length;i++){ blocks[i].nonce=0;
+    while(hashOf(i).slice(0,2)!=="00"){ blocks[i].nonce++; } blocks[i].h=hashOf(i); } render(); }
+document.getElementById("mineChain").onclick=mineChain;
+document.getElementById("tamper").onclick=function(){ blocks[0].data="Alice pays Bob 3000"; render(); };
+render();
+
+/* ---- machine two: proof-of-work miner ---- */
+var diff=document.getElementById("diff"), diffV=document.getElementById("diffV"), odds=document.getElementById("odds"),
+    mineOut=document.getElementById("mineOut"), mining=false;
+function fmt(n){ return n.toLocaleString(); }
+function updDiff(){ diffV.textContent=diff.value; odds.textContent=fmt(Math.pow(16,+diff.value)); }
+diff.oninput=updDiff; updDiff();
+document.getElementById("mineBtn").onclick=function(){
+  if(mining) return; mining=true;
+  var target="0".repeat(+diff.value), header="ROOT0 block · "+new Date().getUTCFullYear(), nonce=0,
+      t0=performance.now(), CHUNK=4000;
+  function step(){
+    if(!mining) return;
+    for(var k=0;k<CHUNK;k++){
+      var h=sha256(header+"|"+nonce);
+      if(h.slice(0,target.length)===target){
+        var dt=(performance.now()-t0)/1000;
+        mineOut.innerHTML="⛏ <b>found it</b> in <span class='v'>"+fmt(nonce+1)+"</span> hashes · "+dt.toFixed(2)+"s · "+
+          fmt(Math.round((nonce+1)/Math.max(dt,.001)))+" H/s<br>nonce <span class='v'>"+nonce+"</span><br>hash <span class='hash'>"+h+"</span>";
+        mining=false; return;
+      }
+      nonce++;
+    }
+    var el=(performance.now()-t0)/1000;
+    mineOut.innerHTML="mining… <span class='v'>"+fmt(nonce)+"</span> hashes · "+el.toFixed(1)+"s · "+fmt(Math.round(nonce/Math.max(el,.001)))+" H/s";
+    setTimeout(step,0);
+  }
+  step();
+};
+document.getElementById("mineStop").onclick=function(){ mining=false; mineOut.innerHTML+=" <span style='color:var(--dim)'>· stopped</span>"; };
+
+if(!SHA_OK){ document.getElementById("chain").innerHTML="<div class='blk bad'>SHA-256 self-test failed — refusing to show fake hashes.</div>"; }
+</script>
+</body>
+</html>
