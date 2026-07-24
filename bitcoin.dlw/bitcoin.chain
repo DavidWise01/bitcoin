@@ -2,8 +2,8 @@ ROOT0-DLW-CHAIN-v1
 index : 817
 slug  : bitcoin
 seal  : 66e8a761bdb07f8bb4db038d700949e23d41fe1b3708604b28681f9a2e43c6c1
-prev  : b9e6623d8ceb01222174a50167adf31202c1cd1d8cadbbda82f84a7429c7ba2e
-link  : f63a4b5e88e0befdc6ca0eca4ccac3af6d1d542e91c9914822a64a2ec1ff2f96
-head  : 13f9ace173ef2e60af38912ba329b4afcb5a38b84a0e4495e8d30327f8c99cc2
+prev  : cdf54c3bac87d6c197c377fe5a3f766f3a7b5a7786e80a676b974b772d657936
+link  : 479498c8e481324e766b115582c7d9a59c71198c4d54871b83ff0d85ec223c16
+head  : f7444724835fd968bd2eac85811f9fa823a18d20a57907b4fade8d96b70b5409
 
 — the tether: link = sha256(index|slug|seal|prev). the chain head commits to the whole corpus.
